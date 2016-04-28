@@ -1,3 +1,4 @@
+repo: https://github.com/tvansteenburgh/review-queue-charm.git
 includes:
   - 'layer:basic'
   - 'interface:pgsql'

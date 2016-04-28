@@ -1,6 +1,5 @@
 import configparser
 import os
-import re
 import shutil
 import subprocess
 
@@ -11,7 +10,6 @@ from charmhelpers.core.unitdata import kv
 from charmhelpers.core.hookenv import log
 from charmhelpers.core.hookenv import open_port
 from charmhelpers.core.hookenv import status_set
-from charmhelpers.core.hookenv import unit_private_ip
 
 from charmhelpers.core.host import chownr
 from charmhelpers.core.host import service_restart
@@ -23,6 +21,7 @@ from charmhelpers.fetch import install_remote
 from charms.reactive import when
 from charms.reactive import when_not
 from charms.reactive import when_file_changed
+from charms.reactive import relations
 from charms.reactive import set_state
 # from charms.reactive import hook
 
@@ -95,7 +94,7 @@ def change_config():
 
 @when('website.available')
 def configure_website(http):
-    http.configure(unit_private_ip(), config['port'])
+    http.configure(config['port'])
 
 
 @when('db.database.available')
@@ -149,3 +148,6 @@ def after_config_change(config_key):
         open_port(config['port'])
         if config.previous('port'):
             close_port(config.previous('port'))
+        http = relations.RelationBase.from_state('website.available')
+        if http:
+            http.configure(config['port'])
