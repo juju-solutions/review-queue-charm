@@ -4,10 +4,11 @@ maintainer: Tim Van Steenburgh <tim.van.teenburgh@canonical.com>
 description: |
   Review Queue web app
 tags:
-  # Replace "misc" with one or more whitelisted tags from this list:
-  # https://jujucharms.com/docs/stable/authors-charm-metadata
   - web-app
 subordinate: false
+series:
+  - xenial
+  - trusty
 provides:
   website:
     interface: http

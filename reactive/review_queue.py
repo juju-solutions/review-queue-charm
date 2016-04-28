@@ -60,12 +60,18 @@ CFG_INI_KEYS = [
     'sendgrid.from_email',
 ]
 
+# Map ini key to the ini section it goes in. For ini keys not
+# listed here, default section is 'app:main'
+INI_SECTIONS = {
+    'port': 'server:main',
+}
+
 
 @when('config.changed.repo')
 def install_review_queue():
     status_set('maintenance', 'Installing Review Queue')
 
-    tmp_dir = install_remote(config['repo'], dest='/tmp', depth=1)
+    tmp_dir = install_remote(config['repo'], dest='/tmp', depth='1')
     shutil.rmtree(APP_DIR, ignore_errors=True)
     log('Moving app source from {} to {}'.format(
         tmp_dir, APP_DIR))
@@ -133,10 +139,11 @@ def update_ini(kv_pairs):
     ini.read(APP_INI_SRC)
 
     for k, v in kv_pairs:
-        curr_val = ini.get('app:main', k)
+        section = INI_SECTIONS.get(k, 'app:main')
+        curr_val = ini.get(section, k)
         if curr_val != v:
             ini_changed = True
-            ini.set('app:main', k, v)
+            ini.set(section, k, v)
 
     if ini_changed:
         with open(APP_INI_SRC, 'w') as f:
