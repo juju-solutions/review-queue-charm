@@ -1,0 +1,67 @@
+options:
+  repo:
+    type: string
+    default: https://github.com/tvansteenburgh/review-queue.git
+    description: |
+      The git url from which to clone the review-queue application.
+  port:
+    type: int
+    default: 6542
+    description: |
+      Port on which to serve the web app.
+  base_url:
+    type: string
+    default: ''
+    description: >
+      The url at which the application will be served. If not set,
+      defaults to the public ip address of the host.
+  charmstore_api_url:
+    type: string
+    default: https://api.jujucharms.com/v4
+    description: >
+      CharmStore API endpoint
+  launchpad_api_url:
+    type: string
+    default: https://api.launchpad.net/1.0
+    description: >
+      Launchpad API endpoint
+  testing_timeout:
+    type: int
+    default: 86400
+    descripion: >
+      The time in seconds after which a test will be considered to
+      be timed out.
+  testing_substrates:
+    type: string
+    default: aws,azure,hp,joyent,lxc,power8
+    descripion: >
+      Comma-delimited list of available testing substrates.
+  testing_default_substrates:
+    type: string
+    default: lxc
+    descripion: >
+      Comma-delimited list of default testing substrates. These are
+      the substrates against which new submissions will be automatically
+      tested.
+  testing_jenkins_url:
+    type: string
+    default: http://juju-ci.vapour.ws:8080/job/charm-bundle-test-wip/buildWithParameters
+    descripion: >
+      Jenkins URL to which test jobs will be submitted.
+  testing_jenkins_token:
+    type: string
+    default: ''
+    descripion: >
+      Jenkins validation token for the job denoted by the
+      'testing_jenkins_url' config value.
+  sendgrid_api_key:
+    type: string
+    default: ''
+    description: >
+      Supply a Sendgrid API Key with mail-send capabilities
+      to enable email notifications from the review-queue app.
+  sendgrid_from_email:
+    type: string
+    default: no-reply@review.juju.solutions
+    description: >
+      From address used for email sent by the app.

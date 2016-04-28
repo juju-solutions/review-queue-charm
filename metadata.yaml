@@ -1,0 +1,16 @@
+name: review-queue
+summary: Review Queue web app
+maintainer: Tim Van Steenburgh <tim.van.teenburgh@canonical.com>
+description: |
+  Review Queue web app
+tags:
+  # Replace "misc" with one or more whitelisted tags from this list:
+  # https://jujucharms.com/docs/stable/authors-charm-metadata
+  - web-app
+subordinate: false
+provides:
+  website:
+    interface: http
+requires:
+  db:
+    interface: pgsql
