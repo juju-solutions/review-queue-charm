@@ -90,7 +90,7 @@ def change_config():
     for ini_key in CFG_INI_KEYS:
         cfg_key = ini_key.replace('.', '_')
         if config.changed(cfg_key):
-            changes.append((cfg_key, config[cfg_key]))
+            changes.append((ini_key, config[cfg_key]))
 
     if changes:
         update_ini(changes)
