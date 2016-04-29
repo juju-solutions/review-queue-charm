@@ -3,6 +3,7 @@ includes:
   - 'layer:basic'
   - 'interface:pgsql'
   - 'interface:http'
+  - 'interface:rabbitmq'
 options:
   basic:
     packages:
