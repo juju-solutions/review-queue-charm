@@ -26,7 +26,7 @@ from charms.reactive import remove_state
 
 
 config = config()
-db = kv()
+kvdb = kv()
 
 DB_NAME = 'reviewqueue'
 DB_ROLE = 'reviewqueue'
@@ -131,8 +131,8 @@ def configure_amqp(amqp):
         amqp.vhost(),
     )
 
-    if db.get('amqp_uri') != amqp_uri:
-        db.set('amqp_uri', amqp_uri)
+    if kvdb.get('amqp_uri') != amqp_uri:
+        kvdb.set('amqp_uri', amqp_uri)
 
         update_ini([
             ('broker', amqp_uri),
@@ -158,8 +158,8 @@ def configure_db(db):
         db.database(),
     )
 
-    if db.get('db_uri') != db_uri:
-        db.set('db_uri', db_uri)
+    if kvdb.get('db_uri') != db_uri:
+        kvdb.set('db_uri', db_uri)
 
         update_ini([
             ('sqlalchemy.url', db_uri),
@@ -184,7 +184,7 @@ def restart_web_service(db):
 @when('reviewqueue.tasks.needs-restart')
 @when('db.database.available')
 @when('amqp.available')
-def restart_task_service(db):
+def restart_task_service(amqp, db):
     service_restart(TASK_SERVICE)
     remove_state('reviewqueue.tasks.needs-restart')
 
