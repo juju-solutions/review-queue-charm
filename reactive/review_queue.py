@@ -124,7 +124,7 @@ def setup_amqp(amqp):
 @when('amqp.available')
 def configure_amqp(amqp):
     amqp_uri = 'amqp://{}:{}@{}:{}/{}'.format(
-        amqp.user(),
+        amqp.username(),
         amqp.password(),
         amqp.private_address(),
         '5672',  # amqp.port() not available?
