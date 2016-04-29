@@ -28,30 +28,30 @@ options:
   testing_timeout:
     type: int
     default: 86400
-    descripion: >
+    description: >
       The time in seconds after which a test will be considered to
       be timed out.
   testing_substrates:
     type: string
     default: aws,azure,hp,joyent,lxc,power8
-    descripion: >
+    description: >
       Comma-delimited list of available testing substrates.
   testing_default_substrates:
     type: string
     default: lxc
-    descripion: >
+    description: >
       Comma-delimited list of default testing substrates. These are
       the substrates against which new submissions will be automatically
       tested.
   testing_jenkins_url:
     type: string
     default: http://juju-ci.vapour.ws:8080/job/charm-bundle-test-wip/buildWithParameters
-    descripion: >
+    description: >
       Jenkins URL to which test jobs will be submitted.
   testing_jenkins_token:
     type: string
     default: ''
-    descripion: >
+    description: >
       Jenkins validation token for the job denoted by the
       'testing_jenkins_url' config value.
   sendgrid_api_key:
