@@ -42,8 +42,9 @@ SERVICE = 'reviewqueue'
 UPSTART_FILE = '{}.conf'.format(SERVICE)
 UPSTART_SRC = os.path.join(charm_dir(), 'files', UPSTART_FILE)
 UPSTART_DEST = os.path.join('/etc/init', UPSTART_FILE)
-LP_CREDS_SRC = os.path.join(charm_dir(), 'files', 'lp-creds')
-LP_CREDS_DEST = os.path.join(APP_DIR, UPSTART_FILE)
+LP_CREDS_FILE = 'lp-creds'
+LP_CREDS_SRC = os.path.join(charm_dir(), 'files', LP_CREDS_FILE)
+LP_CREDS_DEST = os.path.join(APP_DIR, LP_CREDS_FILE)
 
 
 # List of app .ini keys that map to charm config.yaml keys

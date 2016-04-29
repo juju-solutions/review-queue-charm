@@ -1,65 +1,60 @@
 # Overview
 
-Describe the intended usage of this charm and anything unique about how this
-charm relates to others here.
-
-This README will be displayed in the Charm Store, it should be either Markdown
-or RST. Ideal READMEs include instructions on how to use the charm, expected
-usage, and charm features that your audience might be interested in. For an
-example of a well written README check out Hadoop:
-http://jujucharms.com/charms/precise/hadoop
-
-Use this as a Markdown reference if you need help with the formatting of this
-README: http://askubuntu.com/editing-help
-
-This charm provides [service][]. Add a description here of what the service
-itself actually does.
-
-Also remember to check the [icon guidelines][] so that your charm looks good
-in the Juju GUI.
+This charm provides the Juju Charms Review Queue, a web app for reviewing
+submissions to the Juju Charm Store.
 
 # Usage
 
-Step by step instructions on using the charm:
+Bare minimim deployment:
 
-juju deploy servicename
+    juju deploy cs:~tvansteenburgh/review-queue
+    juju deploy cs:~tribaal/trusty/postgresql-built
 
-and so on. If you're providing a web service or something that the end user
-needs to go to, tell them here, especially if you're deploying a service that
-might listen to a non-default port.
+    # the review-queue requires postgres 9.4+
+    juju set-config postgresql version='9.4' pgdg=true
 
-You can then browse to http://ip-address to configure the service.
+    juju add-relation review-queue:db postgresql:db
+
+To enable background tasks you must also deploy and relate a message broker:
+
+    juju deploy rabbitmq-server
+    juju add-relation review-queue rabbitmq-server
+
+When the deployment is ready you'll see "Serving on port xxxx" in the output
+of `juju status`. Browse to the ip and port listed there.
+
+To enable all features, please see the Configuration section below.
 
 ## Scale out Usage
 
-If the charm has any recommendations for running at scale, outline them in
-examples here. For example if you have a memcached relation that improves
-performance, mention it here.
+You can horizontally scale the review-queue by adding haproxy, with multiple
+review-queue units behind it:
 
-## Known Limitations and Issues
+    juju deploy haproxy
+    juju add-relation review-queue haproxy
 
-This not only helps users but gives people a place to start if they want to help
-you add features to your charm.
+    juju add-unit -n 2 review-queue
 
 # Configuration
 
-The configuration options will be listed on the charm store, however If you're
-making assumptions or opinionated decisions in the charm (like setting a default
-administrator password), you should detail that here so the user knows how to
-change it immediately, etc.
+To enable Jenkins integration for testing incoming submissions, you must set
+the appropriate configuration, for example:
 
-# Contact Information
+    juju set-config review-queue \
+      testing_jenkins_url=http://juju-ci.vapour.ws:8080/job/charm-bundle-test-wip/buildWithParameters \
+      testing_jenkins_token=secrettoken
 
-Though this will be listed in the charm store itself don't assume a user will
-know that, so include that information here:
+To enable email notifications from the app, you must provide a Sendgrid API
+key with mail-send permissions, for example:
 
-## Upstream Project Name
+    juju set-config review-queue sendgrid_api_key=mysecretsendgridapikey
 
-  - Upstream website
-  - Upstream bug tracker
-  - Upstream mailing list or contact information
-  - Feel free to add things if it's useful for users
+You should also set `base_url` to the url at which you are running the app to
+ensure that links in generated emails point to the right place:
+
+    juju set-config review-queue base_url=http://review.juju.solutions
 
 
-[service]: http://example.com
-[icon guidelines]: https://jujucharms.com/docs/stable/authors-charm-icon
+## Upstream Project - Review Queue Pyramid App
+
+- Github: https://github.com/tvansteenburgh/review-queue
