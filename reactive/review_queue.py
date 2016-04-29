@@ -20,10 +20,9 @@ from charmhelpers.fetch import install_remote
 
 from charms.reactive import when
 from charms.reactive import when_not
-from charms.reactive import when_file_changed
 from charms.reactive import relations
 from charms.reactive import set_state
-# from charms.reactive import hook
+from charms.reactive import remove_state
 
 
 config = config()
@@ -43,6 +42,8 @@ SERVICE = 'reviewqueue'
 UPSTART_FILE = '{}.conf'.format(SERVICE)
 UPSTART_SRC = os.path.join(charm_dir(), 'files', UPSTART_FILE)
 UPSTART_DEST = os.path.join('/etc/init', UPSTART_FILE)
+LP_CREDS_SRC = os.path.join(charm_dir(), 'files', 'lp-creds')
+LP_CREDS_DEST = os.path.join(APP_DIR, UPSTART_FILE)
 
 
 # List of app .ini keys that map to charm config.yaml keys
@@ -78,6 +79,8 @@ def install_review_queue():
     shutil.move(tmp_dir, APP_DIR)
     subprocess.check_call('make .venv'.split(), cwd=APP_DIR)
     shutil.copyfile(UPSTART_SRC, UPSTART_DEST)
+    shutil.copyfile(LP_CREDS_SRC, LP_CREDS_DEST)
+    shutil.copyfile(APP_INI_SRC, APP_INI_DEST)
     chownr(APP_DIR, APP_USER, APP_GROUP)
 
     set_state('review-queue.installed')
@@ -104,13 +107,13 @@ def configure_website(http):
 
 
 @when('db.database.available')
-def render_ini(pgsql):
+def render_ini(db):
     db_uri = 'postgresql://{}:{}@{}:{}/{}'.format(
-        pgsql.user(),
-        pgsql.password(),
-        pgsql.host(),
-        pgsql.port(),
-        pgsql.database(),
+        db.user(),
+        db.password(),
+        db.host(),
+        db.port(),
+        db.database(),
     )
 
     update_ini([
@@ -125,29 +128,32 @@ def stop_service():
     status_set('waiting', 'Waiting for database')
 
 
-@when('db.database.available')
-@when_file_changed(APP_INI_DEST)
-def restart_service():
+@when('review-queue.needs-restart', 'db.database.available')
+def restart_service(db):
     service_restart(SERVICE)
     status_set('active', 'Serving on port {port}'.format(**config))
+    remove_state('review-queue.needs-restart')
 
 
 def update_ini(kv_pairs):
     ini_changed = False
 
     ini = configparser.RawConfigParser()
-    ini.read(APP_INI_SRC)
+    ini.read(APP_INI_DEST)
 
     for k, v in kv_pairs:
         section = INI_SECTIONS.get(k, 'app:main')
         curr_val = ini.get(section, k)
         if curr_val != v:
             ini_changed = True
+            log('[{}] {} = {}'.format(section, k, v))
             ini.set(section, k, v)
 
     if ini_changed:
-        with open(APP_INI_SRC, 'w') as f:
+        with open(APP_INI_DEST, 'w') as f:
             ini.write(f)
+
+        set_state('review-queue.needs-restart')
 
 
 def after_config_change(config_key):

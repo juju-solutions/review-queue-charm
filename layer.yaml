@@ -7,6 +7,5 @@ options:
   basic:
     packages:
       - make
-      - upstart
       - python
       - python-virtualenv
