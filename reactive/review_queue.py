@@ -22,7 +22,7 @@ from charms.reactive import when
 from charms.reactive import when_not
 from charms.reactive import relations
 from charms.reactive import set_state
-from charms.reactive import remove_state
+from charms.reactive import is_state
 
 
 config = config()
@@ -108,6 +108,9 @@ def change_config():
         for change in changes:
             after_config_change(change[0])
 
+        if is_state('db.database.available'):
+            restart_web_service()
+
 
 @when('website.available')
 def configure_website(http):
@@ -118,7 +121,7 @@ def configure_website(http):
 def setup_amqp(amqp):
     amqp.request_access(
         username='reviewqueue',
-        vhost='reviewqueueu')
+        vhost='reviewqueue')
 
 
 @when('amqp.available')
@@ -131,7 +134,8 @@ def configure_amqp(amqp):
         amqp.vhost(),
     )
 
-    if kvdb.get('amqp_uri') != amqp_uri:
+    if (kvdb.get('amqp_uri') != amqp_uri or
+            not service_running(TASK_SERVICE)):
         kvdb.set('amqp_uri', amqp_uri)
 
         update_ini([
@@ -139,11 +143,13 @@ def configure_amqp(amqp):
             ('backend', 'rpc://'),
         ], section='celery')
 
-        set_state('reviewqueue.tasks.needs-restart')
+        if service_running(SERVICE):
+            service_restart(TASK_SERVICE)
 
 
 @when_not('amqp.available')
 def stop_task_service():
+    kvdb.set('amqp_uri', None)
     if service_running(TASK_SERVICE):
         service_stop(TASK_SERVICE)
 
@@ -158,35 +164,30 @@ def configure_db(db):
         db.database(),
     )
 
-    if kvdb.get('db_uri') != db_uri:
+    if (kvdb.get('db_uri') != db_uri or
+            not service_running(SERVICE)):
         kvdb.set('db_uri', db_uri)
 
         update_ini([
             ('sqlalchemy.url', db_uri),
         ])
 
+        restart_web_service()
+
 
 @when_not('db.database.available')
 def stop_web_service():
+    kvdb.set('db_uri', None)
     if service_running(SERVICE):
         service_stop(SERVICE)
     status_set('waiting', 'Waiting for database')
 
 
-@when('reviewqueue.needs-restart')
-@when('db.database.available')
-def restart_web_service(db):
-    service_restart(SERVICE)
-    status_set('active', 'Serving on port {port}'.format(**config))
-    remove_state('reviewqueue.needs-restart')
-
-
-@when('reviewqueue.tasks.needs-restart')
-@when('db.database.available')
-@when('amqp.available')
-def restart_task_service(amqp, db):
-    service_restart(TASK_SERVICE)
-    remove_state('reviewqueue.tasks.needs-restart')
+def restart_web_service():
+    started = service_restart(SERVICE)
+    if started:
+        status_set('active', 'Serving on port {port}'.format(**config))
+    return started
 
 
 def update_ini(kv_pairs, section=None):
@@ -206,8 +207,6 @@ def update_ini(kv_pairs, section=None):
     if ini_changed:
         with open(APP_INI_DEST, 'w') as f:
             ini.write(f)
-
-        set_state('reviewqueue.needs-restart')
 
 
 def after_config_change(config_key):
