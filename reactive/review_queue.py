@@ -111,6 +111,9 @@ def change_config():
         if is_state('db.database.available'):
             restart_web_service()
 
+            if is_state('amqp.available'):
+                service_restart(TASK_SERVICE)
+
 
 @when('website.available')
 def configure_website(http):
