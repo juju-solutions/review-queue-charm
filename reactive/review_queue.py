@@ -2,6 +2,7 @@ import configparser
 import os
 import shutil
 import subprocess
+import tempfile
 
 from charmhelpers.core.hookenv import charm_dir
 from charmhelpers.core.hookenv import close_port
@@ -79,11 +80,18 @@ INI_SECTIONS = {
 def install_review_queue():
     status_set('maintenance', 'Installing Review Queue')
 
-    tmp_dir = install_remote(config['repo'], dest='/tmp', depth='1')
-    shutil.rmtree(APP_DIR, ignore_errors=True)
-    log('Moving app source from {} to {}'.format(
-        tmp_dir, APP_DIR))
-    shutil.move(tmp_dir, APP_DIR)
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        install_dir = install_remote(config['repo'], dest=tmp_dir)
+        contents = os.listdir(install_dir)
+        if install_dir == tmp_dir and len(contents) == 1:
+            # unlike the git handler, the archive handler just returns tmp_dir
+            # even if the archive contents are nested in a folder as they
+            # should be, so we have to normalize for that here
+            install_dir = os.path.join(install_dir, contents[0])
+        shutil.rmtree(APP_DIR, ignore_errors=True)
+        log('Moving app source from {} to {}'.format(
+            install_dir, APP_DIR))
+        shutil.move(install_dir, APP_DIR)
     subprocess.check_call('make .venv'.split(), cwd=APP_DIR)
     shutil.copyfile(UPSTART_SRC, UPSTART_DEST)
     shutil.copyfile(UPSTART_TASK_SRC, UPSTART_TASK_DEST)

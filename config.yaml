@@ -1,7 +1,7 @@
 options:
   repo:
     type: string
-    default: https://github.com/tvansteenburgh/review-queue.git
+    default: https://github.com/juju-solutions/review-queue/archive/master.zip
     description: |
       The git url from which to clone the review-queue application.
   port:
