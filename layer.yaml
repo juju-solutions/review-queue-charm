@@ -1,4 +1,4 @@
-repo: https://github.com/tvansteenburgh/review-queue-charm.git
+repo: https://github.com/juju-solutions/review-queue-charm.git
 includes:
   - 'layer:basic'
   - 'interface:pgsql'

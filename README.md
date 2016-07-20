@@ -8,7 +8,7 @@ submissions to the Juju Charm Store.
 Bare minimim deployment:
 
     juju deploy cs:~tvansteenburgh/review-queue
-    juju deploy cs:~tribaal/trusty/postgresql-built
+    juju deploy cs:postgresql
 
     # the review-queue requires postgres 9.4+
     juju set-config postgresql version='9.4' pgdg=true
@@ -57,4 +57,4 @@ ensure that links in generated emails point to the right place:
 
 ## Upstream Project - Review Queue Pyramid App
 
-- Github: https://github.com/tvansteenburgh/review-queue
+- Github: https://github.com/juju-solutions/review-queue
