@@ -83,7 +83,7 @@ def install_review_queue():
     with tempfile.TemporaryDirectory() as tmp_dir:
         try:
             install_dir = install_remote(config['repo'], dest=tmp_dir)
-        except:
+        except Exception:
             if is_state('config.default.repo'):
                 local_archive = 'file://{}/files/master.zip'.format(
                     charm_dir())
