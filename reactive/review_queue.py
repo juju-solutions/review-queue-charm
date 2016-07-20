@@ -81,7 +81,14 @@ def install_review_queue():
     status_set('maintenance', 'Installing Review Queue')
 
     with tempfile.TemporaryDirectory() as tmp_dir:
-        install_dir = install_remote(config['repo'], dest=tmp_dir)
+        try:
+            install_dir = install_remote(config['repo'], dest=tmp_dir)
+        except:
+            if is_state('config.default.repo'):
+                local_archive = 'file://{}/files/master.zip'.format(
+                    charm_dir())
+                install_dir = install_remote(local_archive, dest=tmp_dir)
+
         contents = os.listdir(install_dir)
         if install_dir == tmp_dir and len(contents) == 1:
             # unlike the git handler, the archive handler just returns tmp_dir
