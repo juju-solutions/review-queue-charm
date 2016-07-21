@@ -16,6 +16,7 @@ from charmhelpers.core.host import chownr
 from charmhelpers.core.host import service_restart
 from charmhelpers.core.host import service_running
 from charmhelpers.core.host import service_stop
+from charmhelpers.core.host import init_is_systemd
 
 from charmhelpers.fetch import install_remote
 
@@ -42,12 +43,22 @@ SERVICE = 'reviewqueue'
 TASK_SERVICE = 'reviewqueue-tasks'
 
 UPSTART_FILE = '{}.conf'.format(SERVICE)
-UPSTART_SRC = os.path.join(charm_dir(), 'files', UPSTART_FILE)
+UPSTART_SRC = os.path.join(charm_dir(), 'files', 'upstart', UPSTART_FILE)
 UPSTART_DEST = os.path.join('/etc/init', UPSTART_FILE)
 
 UPSTART_TASK_FILE = '{}.conf'.format(TASK_SERVICE)
-UPSTART_TASK_SRC = os.path.join(charm_dir(), 'files', UPSTART_TASK_FILE)
+UPSTART_TASK_SRC = os.path.join(charm_dir(), 'files', 'upstart',
+                                UPSTART_TASK_FILE)
 UPSTART_TASK_DEST = os.path.join('/etc/init', UPSTART_TASK_FILE)
+
+SYSTEMD_FILE = '{}.service'.format(SERVICE)
+SYSTEMD_SRC = os.path.join(charm_dir(), 'files', 'systemd', SYSTEMD_FILE)
+SYSTEMD_DEST = os.path.join('/etc/systemd/system', SYSTEMD_FILE)
+
+SYSTEMD_TASK_FILE = '{}.service'.format(TASK_SERVICE)
+SYSTEMD_TASK_SRC = os.path.join(charm_dir(), 'files', 'systemd',
+                                SYSTEMD_TASK_FILE)
+SYSTEMD_TASK_DEST = os.path.join('/etc/systemd/system', SYSTEMD_TASK_FILE)
 
 LP_CREDS_FILE = 'lp-creds'
 LP_CREDS_SRC = os.path.join(charm_dir(), 'files', LP_CREDS_FILE)
@@ -93,8 +104,12 @@ def install_review_queue():
             install_dir, APP_DIR))
         shutil.move(install_dir, APP_DIR)
     subprocess.check_call('make .venv'.split(), cwd=APP_DIR)
-    shutil.copyfile(UPSTART_SRC, UPSTART_DEST)
-    shutil.copyfile(UPSTART_TASK_SRC, UPSTART_TASK_DEST)
+    if init_is_systemd():
+        shutil.copyfile(SYSTEMD_SRC, SYSTEMD_DEST)
+        shutil.copyfile(SYSTEMD_TASK_SRC, SYSTEMD_TASK_DEST)
+    else:
+        shutil.copyfile(UPSTART_SRC, UPSTART_DEST)
+        shutil.copyfile(UPSTART_TASK_SRC, UPSTART_TASK_DEST)
     shutil.copyfile(LP_CREDS_SRC, LP_CREDS_DEST)
     shutil.copyfile(APP_INI_SRC, APP_INI_DEST)
     chownr(APP_DIR, APP_USER, APP_GROUP)
@@ -183,6 +198,9 @@ def configure_db(db):
             ('sqlalchemy.url', db_uri),
         ])
 
+        # initialize the DB
+        subprocess.check_call(['/opt/reviewqueue/.venv/bin/initialize_db',
+                               '/etc/reviewqueue.ini'])
         restart_web_service()
 
 
@@ -198,6 +216,8 @@ def restart_web_service():
     started = service_restart(SERVICE)
     if started:
         status_set('active', 'Serving on port {port}'.format(**config))
+    else:
+        status_set('blocked', 'Service failed to start')
     return started
 
 
