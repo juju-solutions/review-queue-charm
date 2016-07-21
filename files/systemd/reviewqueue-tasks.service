@@ -1,0 +1,15 @@
+[Unit]
+Description=Review Queue Tasks
+After=network.target
+After=systemd-user-sessions.service
+
+[Service]
+User=ubuntu
+Type=simple
+Restart=always
+WorkingDirectory=/tmp
+Environment=ENV=/etc/reviewqueue
+ExecStart=/opt/reviewqueue/.venv/bin/celery -A reviewqueue.celerycfg worker -l info -B
+
+[Install]
+WantedBy=multi-user.target

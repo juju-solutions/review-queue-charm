@@ -1,0 +1,14 @@
+[Unit]
+Description=Review Queue
+After=network.target
+After=systemd-user-sessions.service
+
+[Service]
+User=ubuntu
+Type=simple
+Restart=always
+WorkingDirectory=/opt/reviewqueue
+ExecStart=/opt/reviewqueue/.venv/bin/pserve /etc/reviewqueue.ini
+
+[Install]
+WantedBy=multi-user.target
