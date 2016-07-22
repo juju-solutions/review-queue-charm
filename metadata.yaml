@@ -8,7 +8,6 @@ tags:
 subordinate: false
 series:
   - xenial
-  - trusty
 provides:
   website:
     interface: http
