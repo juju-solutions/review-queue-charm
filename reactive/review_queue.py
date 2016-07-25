@@ -141,6 +141,8 @@ def change_config():
 @when('website.available')
 def configure_website(http):
     http.configure(config['port'])
+    # manual set on the relation because haproxy extends the interface protocol
+    http.conversation().set_remote('service_name', 'review-queue')
 
 
 @when('amqp.connected')
