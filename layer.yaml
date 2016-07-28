@@ -1,6 +1,7 @@
 repo: https://github.com/juju-solutions/review-queue-charm.git
 includes:
   - 'layer:basic'
+  - 'layer:nagios'
   - 'interface:pgsql'
   - 'interface:http'
   - 'interface:rabbitmq'

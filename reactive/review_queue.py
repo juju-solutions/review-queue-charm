@@ -7,10 +7,11 @@ import tempfile
 from charmhelpers.core.hookenv import charm_dir
 from charmhelpers.core.hookenv import close_port
 from charmhelpers.core.hookenv import config
-from charmhelpers.core.unitdata import kv
+from charmhelpers.core.hookenv import local_unit
 from charmhelpers.core.hookenv import log
 from charmhelpers.core.hookenv import open_port
 from charmhelpers.core.hookenv import status_set
+from charmhelpers.core.unitdata import kv
 
 from charmhelpers.core.host import chownr
 from charmhelpers.core.host import service_restart
@@ -212,6 +213,18 @@ def stop_web_service():
     if service_running(SERVICE):
         service_stop(SERVICE)
     status_set('waiting', 'Waiting for database')
+
+
+@when('nrpe-external-master.available')
+def setup_nagios(nagios):
+    nagios.add_check([
+        '/usr/lib/nagios/plugins/check_http',
+        '-I', '127.0.0.1', '-p', str(config['port']), '-e', " 200 OK"],
+        name="check_http",
+        description="Verify Review Queue website is responding",
+        context=config["nagios_context"],
+        unit=local_unit(),
+    )
 
 
 def restart_web_service():
