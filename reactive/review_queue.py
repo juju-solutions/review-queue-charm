@@ -219,7 +219,10 @@ def stop_web_service():
 def setup_nagios(nagios):
     nagios.add_check([
         '/usr/lib/nagios/plugins/check_http',
-        '-I', '127.0.0.1', '-p', str(config['port']), '-e', " 200 OK"],
+        '-I', '127.0.0.1',
+        '-p', str(config['port']),
+        '-u', '/reviews',
+        '-e', " 200 OK"],
         name="check_http",
         description="Verify Review Queue website is responding",
         context=config["nagios_context"],
