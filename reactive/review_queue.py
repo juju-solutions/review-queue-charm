@@ -21,6 +21,7 @@ from charmhelpers.core.host import init_is_systemd
 
 from charmhelpers.fetch import install_remote
 
+from charms.reactive import hook
 from charms.reactive import when
 from charms.reactive import when_not
 from charms.reactive import set_state
@@ -85,6 +86,12 @@ CFG_INI_KEYS = [
 INI_SECTIONS = {
     'port': 'server:main',
 }
+
+
+@hook('upgrade-charm')
+def upgrade_charm():
+    # force update / reinstall
+    install_review_queue()
 
 
 @when('config.changed.repo')
