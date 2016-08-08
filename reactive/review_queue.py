@@ -23,9 +23,8 @@ from charmhelpers.fetch import install_remote
 
 from charms.reactive import when
 from charms.reactive import when_not
-from charms.reactive import relations
 from charms.reactive import set_state
-from charms.reactive import is_state
+from charms.reactive import remove_state
 
 
 config = config()
@@ -116,27 +115,13 @@ def install_review_queue():
     chownr(APP_DIR, APP_USER, APP_GROUP)
 
     set_state('reviewqueue.installed')
+    change_config()
 
 
 @when('config.changed', 'reviewqueue.installed')
+@when_not('config.changed.repo')  # handled by install_review_queue instead
 def change_config():
-    changes = []
-
-    for ini_key in CFG_INI_KEYS:
-        cfg_key = ini_key.replace('.', '_')
-        if config.changed(cfg_key):
-            changes.append((ini_key, config[cfg_key]))
-
-    if changes:
-        update_ini(changes)
-        for change in changes:
-            after_config_change(change[0])
-
-        if is_state('db.database.available'):
-            restart_web_service()
-
-            if is_state('amqp.available'):
-                service_restart(TASK_SERVICE)
+    update_ini({key: config[key] for key in CFG_INI_KEYS})
 
 
 @when('website.available')
@@ -163,17 +148,13 @@ def configure_amqp(amqp):
         amqp.vhost(),
     )
 
-    if (kvdb.get('amqp_uri') != amqp_uri or
-            not service_running(TASK_SERVICE)):
+    if kvdb.get('amqp_uri') != amqp_uri:
         kvdb.set('amqp_uri', amqp_uri)
 
-        update_ini([
-            ('broker', amqp_uri),
-            ('backend', 'rpc://'),
-        ], section='celery')
-
-        if service_running(SERVICE):
-            service_restart(TASK_SERVICE)
+        update_ini({
+            'broker': amqp_uri,
+            'backend': 'rpc://',
+        }, section='celery')
 
 
 @when_not('amqp.available')
@@ -197,14 +178,13 @@ def configure_db(db):
             not service_running(SERVICE)):
         kvdb.set('db_uri', db_uri)
 
-        update_ini([
-            ('sqlalchemy.url', db_uri),
-        ])
+        update_ini({
+            'sqlalchemy.url': db_uri,
+        })
 
         # initialize the DB
         subprocess.check_call(['/opt/reviewqueue/.venv/bin/initialize_db',
                                '/etc/reviewqueue.ini'])
-        restart_web_service()
 
 
 @when_not('db.database.available')
@@ -230,13 +210,20 @@ def setup_nagios(nagios):
     )
 
 
+@when('db.database.available', 'reviewqueue.restart')
 def restart_web_service():
     started = service_restart(SERVICE)
     if started:
         status_set('active', 'Serving on port {port}'.format(**config))
     else:
         status_set('blocked', 'Service failed to start')
+    remove_state('reviewqueue.restart')
     return started
+
+
+@when('amqp.available', 'reviewqueue.restart')
+def restart_task_service():
+    service_restart(TASK_SERVICE)
 
 
 def update_ini(kv_pairs, section=None):
@@ -245,7 +232,7 @@ def update_ini(kv_pairs, section=None):
     ini = configparser.RawConfigParser()
     ini.read(APP_INI_DEST)
 
-    for k, v in kv_pairs:
+    for k, v in kv_pairs.items():
         this_section = INI_SECTIONS.get(k, section) or 'app:main'
         curr_val = ini.get(this_section, k)
         if curr_val != v:
@@ -256,13 +243,11 @@ def update_ini(kv_pairs, section=None):
     if ini_changed:
         with open(APP_INI_DEST, 'w') as f:
             ini.write(f)
+        set_state('reviewqueue.restart')
 
 
-def after_config_change(config_key):
-    if config_key == 'port':
-        open_port(config['port'])
-        if config.previous('port'):
-            close_port(config.previous('port'))
-        http = relations.RelationBase.from_state('website.available')
-        if http:
-            http.configure(config['port'])
+@when('config.changed.port', 'reviewqueue.installed')
+def update_port():
+    open_port(config['port'])
+    if config.previous('port'):
+        close_port(config.previous('port'))
