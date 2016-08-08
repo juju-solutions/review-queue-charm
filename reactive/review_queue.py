@@ -173,7 +173,7 @@ def stop_task_service():
 
 @when('db.database.available')
 def configure_db(db):
-    db_uri = db.master
+    db_uri = db.master.uri
 
     if kvdb.get('db_uri') != db_uri or not service_running(SERVICE):
         kvdb.set('db_uri', db_uri)
