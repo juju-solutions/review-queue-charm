@@ -60,7 +60,7 @@ options:
     description: >
       Supply a Sendgrid API Key with mail-send capabilities
       to enable email notifications from the review-queue app.
-  sendgrid_from_email:
+  mail_default_sender:
     type: string
     default: no-reply@review.juju.solutions
     description: >

@@ -78,6 +78,7 @@ CFG_INI_KEYS = [
     'testing.jenkins_url',
     'testing.jenkins_token',
     'sendgrid.api_key',
+    'mail.default_sender',
 ]
 
 # Map ini key to the ini section it goes in. For ini keys not
