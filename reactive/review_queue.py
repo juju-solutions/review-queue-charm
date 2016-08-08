@@ -123,6 +123,8 @@ def install_review_queue():
 
     set_state('reviewqueue.installed')
     change_config()
+    update_db()
+    update_amqp()
 
 
 @when('config.changed', 'reviewqueue.installed')
@@ -157,7 +159,12 @@ def configure_amqp(amqp):
 
     if kvdb.get('amqp_uri') != amqp_uri:
         kvdb.set('amqp_uri', amqp_uri)
+        update_amqp()
 
+
+def update_amqp():
+    amqp_uri = kvdb.get('amqp_uri')
+    if amqp_uri:
         update_ini({
             'broker': amqp_uri,
             'backend': 'rpc://',
@@ -177,7 +184,12 @@ def configure_db(db):
 
     if kvdb.get('db_uri') != db_uri or not service_running(SERVICE):
         kvdb.set('db_uri', db_uri)
+        update_db()
 
+
+def update_db():
+    db_uri = kvdb.get('db_uri')
+    if db_uri:
         update_ini({
             'sqlalchemy.url': db_uri,
         })
