@@ -128,7 +128,7 @@ def install_review_queue():
 @when('config.changed', 'reviewqueue.installed')
 @when_not('config.changed.repo')  # handled by install_review_queue instead
 def change_config():
-    update_ini({key: config[key] for key in CFG_INI_KEYS})
+    update_ini({key.replace('.', '_'): config[key] for key in CFG_INI_KEYS})
 
 
 @when('website.available')
