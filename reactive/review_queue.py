@@ -3,6 +3,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import uuid
 
 from charmhelpers.core.hookenv import charm_dir
 from charmhelpers.core.hookenv import close_port
@@ -26,6 +27,8 @@ from charms.reactive import when
 from charms.reactive import when_not
 from charms.reactive import set_state
 from charms.reactive import remove_state
+
+from charms import leadership
 
 
 config = config()
@@ -94,7 +97,7 @@ def upgrade_charm():
     install_review_queue()
 
 
-@when('config.changed.repo')
+@when('config.changed.repo', 'leadership.set.session-secret')
 def install_review_queue():
     status_set('maintenance', 'Installing Review Queue')
 
@@ -125,6 +128,18 @@ def install_review_queue():
     change_config()
     update_db()
     update_amqp()
+    update_secret()
+
+
+@when('leadership.is_leader')
+@when_not('leadership.set.session-secret')
+def generate_secret():
+    leadership.leader_set({'session-secret': uuid.uuid4()})
+
+
+@when('leadership.changed.session-secret', 'reviewqueue.installed')
+def update_secret():
+    update_ini({'session.secret': leadership.leader_get('session-secret')})
 
 
 @when('config.changed', 'reviewqueue.installed')
