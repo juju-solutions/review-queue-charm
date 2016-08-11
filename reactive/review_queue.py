@@ -178,7 +178,7 @@ def stop_task_service():
         service_stop(TASK_SERVICE)
 
 
-@when('db.database.available')
+@when('db.master.available')
 def configure_db(db):
     db_uri = db.master.uri
 
@@ -199,7 +199,7 @@ def update_db():
                                '/etc/reviewqueue.ini'])
 
 
-@when_not('db.database.available')
+@when_not('db.master.available')
 def stop_web_service():
     kvdb.set('db_uri', None)
     if service_running(SERVICE):
@@ -222,7 +222,7 @@ def setup_nagios(nagios):
     )
 
 
-@when('db.database.available', 'reviewqueue.restart')
+@when('db.master.available', 'reviewqueue.restart')
 def restart_web_service(db):
     started = service_restart(SERVICE)
     if started:
