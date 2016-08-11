@@ -19,6 +19,7 @@ from charmhelpers.core.host import service_restart
 from charmhelpers.core.host import service_running
 from charmhelpers.core.host import service_stop
 from charmhelpers.core.host import init_is_systemd
+from charmhelpers.core.host import pwgen
 
 from charmhelpers.fetch import install_remote
 
@@ -134,7 +135,7 @@ def install_review_queue():
 @when('leadership.is_leader')
 @when_not('leadership.set.session-secret')
 def generate_secret():
-    leadership.leader_set({'session-secret': uuid.uuid4()})
+    leadership.leader_set({'session-secret': pwgen(64)})
 
 
 @when('leadership.changed.session-secret', 'reviewqueue.installed')
