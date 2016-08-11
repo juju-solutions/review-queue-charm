@@ -62,6 +62,6 @@ options:
       to enable email notifications from the review-queue app.
   mail_default_sender:
     type: string
-    default: no-reply@review.juju.solutions
+    default: no-reply@review.jujucharms.com
     description: >
       From address used for email sent by the app.
