@@ -180,7 +180,8 @@ def stop_task_service():
 
 @when('db.master.available')
 def configure_db(db):
-    db_uri = db.master.uri
+    uri_pat = 'postgresql://{user}:{password}@{host}:{port}/{dbname}'
+    db_uri = uri_pat.format(**db.master)
 
     if kvdb.get('db_uri') != db_uri or not service_running(SERVICE):
         kvdb.set('db_uri', db_uri)
