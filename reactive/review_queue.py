@@ -263,7 +263,7 @@ def update_ini(kv_pairs, section=None):
 
     for k, v in kv_pairs.items():
         this_section = INI_SECTIONS.get(k, section) or 'app:main'
-        curr_val = ini.get(this_section, k)
+        curr_val = ini.get(this_section, k, None)
         if curr_val != v:
             ini_changed = True
             log('[{}] {} = {}'.format(this_section, k, v))
