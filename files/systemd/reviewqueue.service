@@ -8,6 +8,7 @@ User=ubuntu
 Type=simple
 Restart=always
 WorkingDirectory=/opt/reviewqueue
+Environment=ENV=/etc/reviewqueue
 ExecStart=/opt/reviewqueue/.venv/bin/pserve /etc/reviewqueue.ini
 
 [Install]
