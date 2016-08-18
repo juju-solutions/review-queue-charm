@@ -3,7 +3,6 @@ import os
 import shutil
 import subprocess
 import tempfile
-import uuid
 
 from charmhelpers.core.hookenv import charm_dir
 from charmhelpers.core.hookenv import close_port
@@ -130,6 +129,7 @@ def install_review_queue():
     update_db()
     update_amqp()
     update_secret()
+    set_state('reviewqueue.restart')
 
 
 @when('leadership.is_leader')
