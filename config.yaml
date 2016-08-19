@@ -45,7 +45,7 @@ options:
       tested.
   testing_jenkins_url:
     type: string
-    default: http://juju-ci.vapour.ws:8080/job/charm-bundle-test-wip/buildWithParameters
+    default: http://juju-ci.vapour.ws/job/charm-bundle-test-wip/buildWithParameters
     description: >
       Jenkins URL to which test jobs will be submitted.
   testing_jenkins_token:
