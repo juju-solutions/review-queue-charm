@@ -123,6 +123,7 @@ def install_review_queue():
     else:
         shutil.copyfile(UPSTART_SRC, UPSTART_DEST)
         shutil.copyfile(UPSTART_TASK_SRC, UPSTART_TASK_DEST)
+        subprocess.check_call(['initctl', 'reload-configuration'])
     shutil.copyfile(LP_CREDS_SRC, LP_CREDS_DEST)
     shutil.copyfile(APP_INI_SRC, APP_INI_DEST)
     chownr(APP_DIR, APP_USER, APP_GROUP)
