@@ -24,7 +24,9 @@ from charmhelpers.fetch import install_remote
 
 from charms.reactive import hook
 from charms.reactive import when
+from charms.reactive import when_any
 from charms.reactive import when_not
+from charms.reactive import when_not_all
 from charms.reactive import set_state
 from charms.reactive import remove_state
 
@@ -117,6 +119,7 @@ def install_review_queue():
     if init_is_systemd():
         shutil.copyfile(SYSTEMD_SRC, SYSTEMD_DEST)
         shutil.copyfile(SYSTEMD_TASK_SRC, SYSTEMD_TASK_DEST)
+        subprocess.check_call(['systemctl', 'daemon-reload'])
     else:
         shutil.copyfile(UPSTART_SRC, UPSTART_DEST)
         shutil.copyfile(UPSTART_TASK_SRC, UPSTART_TASK_DEST)
@@ -133,14 +136,27 @@ def install_review_queue():
 
 
 @when('leadership.is_leader')
-@when_not('leadership.set.session-secret')
+@when_not_all('leadership.set.auth-secret',
+              'leadership.set.session-validate-key',
+              'leadership.set.session-encrypt-key')
 def generate_secret():
-    leadership.leader_set({'session-secret': pwgen(64)})
+    leadership.leader_set({
+        'auth-secret': pwgen(64),
+        'session-validate-key': pwgen(64),
+        'session-encrypt-key': pwgen(64),
+    })
 
 
-@when('leadership.changed.session-secret', 'reviewqueue.installed')
+@when('reviewqueue.installed')
+@when_any('leadership.set.auth-secret',
+          'leadership.set.session-validate-key',
+          'leadership.set.session-encrypt-key')
 def update_secret():
-    update_ini({'session.secret': leadership.leader_get('session-secret')})
+    update_ini({
+        'auth.secret': leadership.leader_get('auth-secret'),
+        'session.validate_key': leadership.leader_get('session-validate-key'),
+        'session.encrypt_key': leadership.leader_get('session-encrypt-key'),
+    })
 
 
 @when('config.changed', 'reviewqueue.installed')
