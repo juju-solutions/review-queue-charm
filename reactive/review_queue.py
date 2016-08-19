@@ -119,6 +119,7 @@ def install_review_queue():
     if init_is_systemd():
         shutil.copyfile(SYSTEMD_SRC, SYSTEMD_DEST)
         shutil.copyfile(SYSTEMD_TASK_SRC, SYSTEMD_TASK_DEST)
+        subprocess.check_call(['systemctl', 'daemon-reload'])
     else:
         shutil.copyfile(UPSTART_SRC, UPSTART_DEST)
         shutil.copyfile(UPSTART_TASK_SRC, UPSTART_TASK_DEST)
