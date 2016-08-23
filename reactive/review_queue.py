@@ -261,7 +261,7 @@ def setup_nagios(nagios):
 
 
 @when('reviewqueue.db.configured', 'reviewqueue.restart')
-def restart_web_service(db):
+def restart_web_service():
     started = service_restart(SERVICE)
     if started:
         status_set('active', 'Serving on port {port}'.format(**config))
@@ -272,7 +272,7 @@ def restart_web_service(db):
 
 
 @when('reviewqueue.amqp.configured', 'reviewqueue.restart')
-def restart_task_service(amqp):
+def restart_task_service():
     service_restart(TASK_SERVICE)
 
 
