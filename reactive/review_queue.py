@@ -99,7 +99,7 @@ def upgrade_charm():
     install_review_queue()
 
 
-@when('config.changed.repo', 'leadership.set.session-secret')
+@when('config.changed.repo', 'leadership.set.auth-secret')
 def install_review_queue():
     status_set('maintenance', 'Installing Review Queue')
 
