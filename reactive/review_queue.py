@@ -180,7 +180,7 @@ def setup_amqp(amqp):
         vhost='reviewqueue')
 
 
-@when('amqp.available')
+@when('reviewqueue.installed', 'amqp.available')
 def configure_amqp(amqp):
     amqp_uri = 'amqp://{}:{}@{}:{}/{}'.format(
         amqp.username(),
@@ -202,6 +202,7 @@ def update_amqp():
             'broker': amqp_uri,
             'backend': 'rpc://',
         }, section='celery')
+        set_state('reviewqueue.amqp.configured')
 
 
 @when_not('amqp.available')
@@ -209,9 +210,10 @@ def stop_task_service():
     kvdb.set('amqp_uri', None)
     if service_running(TASK_SERVICE):
         service_stop(TASK_SERVICE)
+    remove_state('reviewqueue.amqp.configured')
 
 
-@when('db.master.available')
+@when('reviewqueue.installed', 'db.master.available')
 def configure_db(db):
     uri_pat = 'postgresql://{user}:{password}@{host}:{port}/{dbname}'
     db_uri = uri_pat.format(**db.master)
@@ -231,6 +233,7 @@ def update_db():
         # initialize the DB
         subprocess.check_call(['/opt/reviewqueue/.venv/bin/initialize_db',
                                '/etc/reviewqueue.ini'])
+        set_state('reviewqueue.db.configured')
 
 
 @when_not('db.master.available')
@@ -239,6 +242,7 @@ def stop_web_service():
     if service_running(SERVICE):
         service_stop(SERVICE)
     status_set('waiting', 'Waiting for database')
+    remove_state('reviewqueue.db.configured')
 
 
 @when('nrpe-external-master.available')
@@ -256,7 +260,7 @@ def setup_nagios(nagios):
     )
 
 
-@when('db.master.available', 'reviewqueue.restart')
+@when('reviewqueue.db.configured', 'reviewqueue.restart')
 def restart_web_service(db):
     started = service_restart(SERVICE)
     if started:
@@ -267,7 +271,7 @@ def restart_web_service(db):
     return started
 
 
-@when('amqp.available', 'reviewqueue.restart')
+@when('reviewqueue.amqp.configured', 'reviewqueue.restart')
 def restart_task_service(amqp):
     service_restart(TASK_SERVICE)
 
