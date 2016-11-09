@@ -76,6 +76,7 @@ CFG_INI_KEYS = [
     'port',
     'base_url',
     'charmstore.api.url',
+    'charmstore.usso_token',
     'launchpad.api.url',
     'testing.timeout',
     'testing.substrates',
