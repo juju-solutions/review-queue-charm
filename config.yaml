@@ -20,6 +20,11 @@ options:
     default: https://api.jujucharms.com/v4
     description: >
       CharmStore API endpoint
+  charmstore_usso_token:
+    type: string
+    default: ''
+    description: >
+      The base64-encoded value of a charmstore oauth token.
   launchpad_api_url:
     type: string
     default: https://api.launchpad.net/1.0

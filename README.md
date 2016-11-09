@@ -11,7 +11,7 @@ Bare minimim deployment:
     juju deploy cs:postgresql
 
     # the review-queue requires postgres 9.4+
-    juju set-config postgresql version='9.4' pgdg=true
+    juju config postgresql version='9.4' pgdg=true
 
     juju add-relation review-queue:db postgresql:db
 
@@ -40,19 +40,26 @@ review-queue units behind it:
 To enable Jenkins integration for testing incoming submissions, you must set
 the appropriate configuration, for example:
 
-    juju set-config review-queue \
+    juju config review-queue \
       testing_jenkins_url=http://juju-ci.vapour.ws:8080/job/charm-bundle-test-wip/buildWithParameters \
       testing_jenkins_token=secrettoken
+
+To enable reviews for charms that require terms, you must set a base64-encoded
+charmstore single-sign-on token, for example:
+
+    juju config review-queue \
+      charmstore_usso_token=`base64 ~/.local/share/juju/store-usso-token`
+
 
 To enable email notifications from the app, you must provide a Sendgrid API
 key with mail-send permissions, for example:
 
-    juju set-config review-queue sendgrid_api_key=mysecretsendgridapikey
+    juju config review-queue sendgrid_api_key=mysecretsendgridapikey
 
 You should also set `base_url` to the url at which you are running the app to
 ensure that links in generated emails point to the right place:
 
-    juju set-config review-queue base_url=http://review.juju.solutions
+    juju config review-queue base_url=http://review.juju.solutions
 
 
 ## Upstream Project - Review Queue Pyramid App
