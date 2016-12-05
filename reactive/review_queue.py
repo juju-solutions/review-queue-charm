@@ -277,6 +277,14 @@ def restart_task_service():
     service_restart(TASK_SERVICE)
 
 
+@when('ci.ready')
+def juju_ci(ci):
+    ci_connection = ci.get_connection_info()
+    ci_connection["ip"]
+    ci_endpoint = "http://{}:{}".format(ci_connection["ip"], ci_connection["port"])
+    update_ini({'ci.endpoint': ci_endpoint})
+
+
 def update_ini(kv_pairs, section=None):
     ini_changed = False
 
