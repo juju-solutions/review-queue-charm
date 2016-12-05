@@ -16,3 +16,5 @@ requires:
     interface: pgsql
   amqp:
     interface: rabbitmq
+  ci:
+    interface: charms-ci

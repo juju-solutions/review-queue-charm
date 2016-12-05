@@ -7,12 +7,20 @@ submissions to the Juju Charm Store.
 
 Bare minimim deployment:
 
-    juju deploy cs:~tvansteenburgh/review-queue
-    juju deploy cs:postgresql
+    juju deploy cs:~juju-solutions/review-queue
 
-    # the review-queue requires postgres 9.4+
-    juju config postgresql version='9.4' pgdg=true
+The review queue requires postgres 9.4+ . You would need to create a
+configuration file before deploying the database.
+Here is how the file should look like:
 
+    # cat postgres.yaml
+    postgres:
+      version: '9.4'
+      pgdg: true
+
+Then you can deploy postgres and relate it to the review queue:
+
+    juju deploy --config postgres.yaml cs:postgresql
     juju add-relation review-queue:db postgresql:db
 
 To enable background tasks you must also deploy and relate a message broker:
