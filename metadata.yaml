@@ -1,6 +1,6 @@
 name: review-queue
 summary: Review Queue web app
-maintainer: Tim Van Steenburgh <tim.van.teenburgh@canonical.com>
+maintainers: ["Tim Van Steenburgh <tim.van.teenburgh@canonical.com>"]
 description: |
   Review Queue web app
 tags:

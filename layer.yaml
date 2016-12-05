@@ -6,7 +6,7 @@ includes:
   - 'interface:pgsql'
   - 'interface:http'
   - 'interface:rabbitmq'
-  - 'interface:charm-ci'
+  - 'interface:charms-ci'
 options:
   basic:
     packages:
