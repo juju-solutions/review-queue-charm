@@ -17,4 +17,4 @@ requires:
   amqp:
     interface: rabbitmq
   ci:
-    interface: charms-ci
+    interface: cwr-ci

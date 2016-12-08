@@ -9,16 +9,15 @@ Bare minimim deployment:
 
     juju deploy cs:~juju-solutions/review-queue
 
-The review queue requires postgres 9.4+ . You would need to create a
-configuration file before deploying the database.
-Here is how the file should look like:
+The review queue requires postgres 9.4+ . You will need a configuration file
+to specify options prior to deployment, for example:
 
-    # cat postgres.yaml
+    $ cat postgres.yaml
     postgres:
       version: '9.4'
       pgdg: true
 
-Then you can deploy postgres and relate it to the review queue:
+Now deploy postgres and relate it to the review queue:
 
     juju deploy --config postgres.yaml cs:postgresql
     juju add-relation review-queue:db postgresql:db
