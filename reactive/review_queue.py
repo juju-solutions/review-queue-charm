@@ -265,7 +265,11 @@ def setup_nagios(nagios):
 def restart_web_service():
     started = service_restart(SERVICE)
     if started:
-        status_set('active', 'Serving on port {port}'.format(**config))
+        if config['base_url']:
+            location = '{base_url}'.format(**config)
+        else:
+            location = 'port {port}'.format(**config)
+        status_set('active', 'Serving on {}'.format(location))
     else:
         status_set('blocked', 'Service failed to start')
     remove_state('reviewqueue.restart')
