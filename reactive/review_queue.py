@@ -79,8 +79,6 @@ CFG_INI_KEYS = [
     'charmstore.usso_token',
     'launchpad.api.url',
     'testing.timeout',
-    'testing.substrates',
-    'testing.default_substrates',
     'testing.jenkins_url',
     'testing.jenkins_token',
     'sendgrid.api_key',
@@ -282,11 +280,16 @@ def restart_task_service():
 
 
 @when('ci.ready')
-def juju_ci(ci):
-    ci_connection = ci.get_connection_info()
-    ci_connection["ip"]
-    ci_endpoint = "http://{}:{}".format(ci_connection["ip"], ci_connection["port"])
-    update_ini({'ci.endpoint': ci_endpoint})
+def configure_cwr_ci(ci):
+    cwr_info = ci.get_cwr_info()
+    cwr_url = "http://{ip}:{port}".format(**cwr_info)
+    cwr_controllers = ','.join(cwr_info["controllers"])
+
+    # NB: All registerred controllers (provided by cwr-ci) should be tested by
+    # default. Hence, set both substrate config keys to all known controllers.
+    update_ini({'testing.cwr_url': cwr_url,
+                'testing.default_substrates': cwr_controllers,
+                'testing.substrates': cwr_controllers})
 
 
 def update_ini(kv_pairs, section=None):

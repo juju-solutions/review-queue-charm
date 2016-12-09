@@ -36,18 +36,6 @@ options:
     description: >
       The time in seconds after which a test will be considered to
       be timed out.
-  testing_substrates:
-    type: string
-    default: aws,azure,hp,joyent,lxc,power8
-    description: >
-      Comma-delimited list of available testing substrates.
-  testing_default_substrates:
-    type: string
-    default: lxc
-    description: >
-      Comma-delimited list of default testing substrates. These are
-      the substrates against which new submissions will be automatically
-      tested.
   testing_jenkins_url:
     type: string
     default: http://juju-ci.vapour.ws/job/charm-bundle-test-wip/buildWithParameters
