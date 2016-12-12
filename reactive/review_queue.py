@@ -23,12 +23,13 @@ from charmhelpers.core.host import pwgen
 from charmhelpers.fetch import install_remote
 
 from charms.reactive import hook
+from charms.reactive import is_state
+from charms.reactive import remove_state
+from charms.reactive import set_state
 from charms.reactive import when
 from charms.reactive import when_any
 from charms.reactive import when_not
 from charms.reactive import when_not_all
-from charms.reactive import set_state
-from charms.reactive import remove_state
 
 from charms import leadership
 
@@ -90,6 +91,47 @@ CFG_INI_KEYS = [
 INI_SECTIONS = {
     'port': 'server:main',
 }
+
+
+@when('reviewqueue.installed')
+def update_status():
+    amqp_joined = is_state('amqp.connected')
+    amqp_ready = is_state('amqp.available')
+    db_joined = is_state('db.connected')
+    db_ready = is_state('db.master.available')
+    ci_joined = is_state('ci.joined')
+    ci_ready = is_state('ci.ready')
+
+    missing_apps = []
+    waiting_apps = []
+
+    # Check if we're blocked on required app relations
+    if not ci_joined:
+        missing_apps.append('CWR')
+    if not db_joined:
+        missing_apps.append('PostgreSQL')
+
+    # Check if we're waiting on any connected apps to become ready
+    if amqp_joined and not amqp_ready:
+        waiting_apps.append('RabbitMQ')
+    if ci_joined and not ci_ready:
+        waiting_apps.append('CWR')
+    if db_joined and not db_ready:
+        waiting_apps.append('PostgreSQL')
+
+    # Set appropriate status based on the apps we checked above
+    if missing_apps:
+        status_set('blocked',
+                   'Missing relation for: {}'.format(' & '.join(missing_apps)))
+    elif waiting_apps:
+        status_set('waiting',
+                   'Waiting for: {}'.format(' & '.join(waiting_apps)))
+    else:
+        if config['base_url']:
+            location = '{base_url}'.format(**config)
+        else:
+            location = 'port {port}'.format(**config)
+        status_set('active', 'Serving on {}'.format(location))
 
 
 @hook('upgrade-charm')
@@ -177,6 +219,7 @@ def setup_amqp(amqp):
     amqp.request_access(
         username='reviewqueue',
         vhost='reviewqueue')
+    update_status()
 
 
 @when('reviewqueue.installed', 'amqp.available')
@@ -188,10 +231,10 @@ def configure_amqp(amqp):
         '5672',  # amqp.port() not available?
         amqp.vhost(),
     )
-
     if kvdb.get('amqp_uri') != amqp_uri:
         kvdb.set('amqp_uri', amqp_uri)
         update_amqp()
+    update_status()
 
 
 def update_amqp():
@@ -210,16 +253,17 @@ def stop_task_service():
     if service_running(TASK_SERVICE):
         service_stop(TASK_SERVICE)
     remove_state('reviewqueue.amqp.configured')
+    update_status()
 
 
 @when('reviewqueue.installed', 'db.master.available')
 def configure_db(db):
     uri_pat = 'postgresql://{user}:{password}@{host}:{port}/{dbname}'
     db_uri = uri_pat.format(**db.master)
-
     if kvdb.get('db_uri') != db_uri or not service_running(SERVICE):
         kvdb.set('db_uri', db_uri)
         update_db()
+    update_status()
 
 
 def update_db():
@@ -240,8 +284,8 @@ def stop_web_service():
     kvdb.set('db_uri', None)
     if service_running(SERVICE):
         service_stop(SERVICE)
-    status_set('waiting', 'Waiting for database')
     remove_state('reviewqueue.db.configured')
+    update_status()
 
 
 @when('nrpe-external-master.available')
@@ -259,15 +303,11 @@ def setup_nagios(nagios):
     )
 
 
-@when('reviewqueue.db.configured', 'reviewqueue.restart')
-def restart_web_service():
+@when('ci.ready', 'reviewqueue.db.configured', 'reviewqueue.restart')
+def restart_web_service(ci):
     started = service_restart(SERVICE)
     if started:
-        if config['base_url']:
-            location = '{base_url}'.format(**config)
-        else:
-            location = 'port {port}'.format(**config)
-        status_set('active', 'Serving on {}'.format(location))
+        update_status()
     else:
         status_set('blocked', 'Service failed to start')
     remove_state('reviewqueue.restart')
