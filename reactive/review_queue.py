@@ -322,12 +322,12 @@ def restart_task_service():
 @when('ci.ready')
 def configure_cwr_ci(ci):
     cwr_info = ci.get_cwr_info()
-    cwr_url = "http://{ip}:{port}".format(**cwr_info)
+    cwr_api = "http://{ip}:{port}{api_path}".format(**cwr_info)
     cwr_controllers = ','.join(cwr_info["controllers"])
 
     # NB: All registerred controllers (provided by cwr-ci) should be tested by
     # default. Hence, set both substrate config keys to all known controllers.
-    update_ini({'testing.cwr_url': cwr_url,
+    update_ini({'testing.cwr_api': cwr_api,
                 'testing.default_substrates': cwr_controllers,
                 'testing.substrates': cwr_controllers})
 
