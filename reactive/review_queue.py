@@ -77,7 +77,6 @@ CFG_INI_KEYS = [
     'port',
     'base_url',
     'charmstore.api.url',
-    'charmstore.usso_token',
     'launchpad.api.url',
     'testing.timeout',
     'testing.jenkins_url',
@@ -101,6 +100,7 @@ def update_status():
     db_ready = is_state('db.master.available')
     ci_joined = is_state('ci.joined')
     ci_ready = is_state('ci.ready')
+    ci_store_ready = is_state('ci.store.ready')
 
     missing_apps = []
     waiting_apps = []
@@ -116,6 +116,8 @@ def update_status():
         waiting_apps.append('RabbitMQ')
     if ci_joined and not ci_ready:
         waiting_apps.append('CWR')
+    if ci_ready and not ci_store_ready:
+        waiting_apps.append('CWR (missing store token)')
     if db_joined and not db_ready:
         waiting_apps.append('PostgreSQL')
 
@@ -321,13 +323,14 @@ def restart_task_service():
 
 @when('ci.ready')
 def configure_cwr_ci(ci):
-    cwr_info = ci.get_cwr_info()
-    cwr_api = "http://{ip}:{port}{api_path}".format(**cwr_info)
-    cwr_controllers = ','.join(cwr_info["controllers"])
+    cwr_api = ci.get_rest_url()
+    cwr_controllers = ','.join(ci.controllers())
+    token = ci.store_token()
 
     # NB: All registerred controllers (provided by cwr-ci) should be tested by
     # default. Hence, set both substrate config keys to all known controllers.
-    update_ini({'testing.cwr_api': cwr_api,
+    update_ini({'charmstore.usso_token': token,
+                'testing.cwr_api': cwr_api,
                 'testing.default_substrates': cwr_controllers,
                 'testing.substrates': cwr_controllers})
 

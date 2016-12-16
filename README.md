@@ -51,13 +51,6 @@ the appropriate configuration, for example:
       testing_jenkins_url=http://juju-ci.vapour.ws:8080/job/charm-bundle-test-wip/buildWithParameters \
       testing_jenkins_token=secrettoken
 
-To enable reviews for charms that require terms, you must set a base64-encoded
-charmstore single-sign-on token, for example:
-
-    juju config review-queue \
-      charmstore_usso_token=`base64 ~/.local/share/juju/store-usso-token`
-
-
 To enable email notifications from the app, you must provide a Sendgrid API
 key with mail-send permissions, for example:
 
