@@ -46,6 +46,8 @@ APP_INI_DEST = '/etc/reviewqueue.ini'
 APP_USER = 'ubuntu'
 APP_GROUP = 'ubuntu'
 
+CWR_API_VER = 'v1.0'
+
 SERVICE = 'reviewqueue'
 TASK_SERVICE = 'reviewqueue-tasks'
 
@@ -117,7 +119,7 @@ def update_status():
     if ci_joined and not ci_ready:
         waiting_apps.append('CWR')
     if ci_ready and not ci_store_ready:
-        waiting_apps.append('CWR (missing store token)')
+        waiting_apps.append('CWR (missing charm store token)')
     if db_joined and not db_ready:
         waiting_apps.append('PostgreSQL')
 
@@ -323,14 +325,14 @@ def restart_task_service():
 
 @when('ci.ready')
 def configure_cwr_ci(ci):
-    cwr_api = ci.get_rest_url()
+    cwr_rest = ci.get_rest_url() + "/" + CWR_API_VER
     cwr_controllers = ','.join(ci.controllers())
-    token = ci.store_token()
+    token = ci.store_token() or ""
 
     # NB: All registerred controllers (provided by cwr-ci) should be tested by
     # default. Hence, set both substrate config keys to all known controllers.
     update_ini({'charmstore.usso_token': token,
-                'testing.cwr_api': cwr_api,
+                'testing.cwr_api': cwr_rest,
                 'testing.default_substrates': cwr_controllers,
                 'testing.substrates': cwr_controllers})
 
