@@ -261,20 +261,15 @@ def setup_nagios(nagios):
     )
 
 
-@when('reviewqueue.db.configured', 'reviewqueue.restart')
-def restart_web_service():
-    started = service_restart(SERVICE)
-    if started:
-        status_set('active', 'Serving on port {port}'.format(**config))
-    else:
+@when('reviewqueue.restart')
+@when('reviewqueue.db.configured', 'reviewqueue.amqp.configured')
+def restart_services():
+    if not (service_restart(SERVICE) and service_restart(TASK_SERVICE)):
         status_set('blocked', 'Service failed to start')
+        return False
+    status_set('active', 'Serving on port {port}'.format(**config))
     remove_state('reviewqueue.restart')
-    return started
-
-
-@when('reviewqueue.amqp.configured', 'reviewqueue.restart')
-def restart_task_service():
-    service_restart(TASK_SERVICE)
+    return True
 
 
 def update_ini(kv_pairs, section=None):
